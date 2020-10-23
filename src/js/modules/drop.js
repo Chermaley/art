@@ -1,0 +1,81 @@
+import {postData} from '../services/requests';
+const drop = () =>{
+    //drag *
+    //dragged * 
+    //dragenter - объект над dropArea
+    //dragexit*
+    //dragLeave - объект за пределами dropArea
+    //dragover - объект зависает над dropArea
+    //dragstart *
+    //drop - объект "упал" в dropArea
+    
+    const fileInputs = document.querySelectorAll('[name="upload"]');
+                
+    ['dragenter', 'dragLeave', 'dragover', 'drop'].forEach(eventName =>{
+        fileInputs.forEach(input => {
+            input.addEventListener(eventName, preventDefaults, false);
+        });
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    function highlight(item){
+        item.closest('.file_upload').style.border ="5px solid yellow";
+        item.closest('.file_upload').style.backgroundColor ="rgba(0, 0, 0, .7)";
+    }
+    function unHighlight(item){
+        item.closest('.file_upload').style.border ="none";
+
+        if(item.closest('.calc_form')){
+            item.closest('.file_upload').style.backgroundColor ="#fff";
+        }else if(item.getAttribute('data-no')){
+            item.closest('.file_upload').style.backgroundColor ="#f7e7e6";
+        }else{
+            item.closest('.file_upload').style.backgroundColor ="#ededed";
+        }
+    }
+
+    ['dragenter','dragover'].forEach(eventName =>{
+        fileInputs.forEach(input => {
+            input.addEventListener(eventName, () => highlight(input), false);
+        });
+    });
+    ['dragleave','drop'].forEach(eventName =>{
+        fileInputs.forEach(input => {
+            input.addEventListener(eventName, () => unHighlight(input), false);
+        });
+    });
+
+    fileInputs.forEach(input => {
+        input.addEventListener('drop', (e) => {
+            input.files = e.dataTransfer.files;
+            if (input.getAttribute('data-no') === 'no'){
+                console.log(1);
+                const data = new FormData();
+                data.append('file', input.files[0]);
+                postData('assets/server.php', data)
+                .then(res =>{
+                    console.log(res);
+                });
+            }
+
+            
+            let dots;
+            //Обрезаем имя изображения если оно больше 6 символов
+            const arr = input.files[0].name.split('.');
+            if(arr[0].length > 7){
+                dots ="...";
+            }else{
+                dots = '.';
+            }
+            const name = arr[0].substring(0, 6) + dots + arr[1];
+            input.previousElementSibling.textContent = name;
+
+            
+        });
+    });
+};
+
+export default drop;
